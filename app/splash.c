@@ -28,6 +28,7 @@ static pascal void DrawSplashTitle(DialogPtr dlg, short itemNo)
     Handle itemH;
     Rect box;
     short textWidth;
+    short genevaFont;
     Str255 s;
     BitMap image;
     Rect imageRect;
@@ -36,7 +37,7 @@ static pascal void DrawSplashTitle(DialogPtr dlg, short itemNo)
     SetPort(dlg);
 
     TextFont(0);
-    TextSize(0);
+    TextSize(12);
     TextFace(bold);
     BlockMove("\pThe Artful Type", s, 16);
     textWidth = StringWidth(s);
@@ -52,8 +53,11 @@ static pascal void DrawSplashTitle(DialogPtr dlg, short itemNo)
         box.top + 28);
     CopyBits(&image, &((GrafPtr)dlg)->portBits, &image.bounds, &imageRect, srcCopy, NULL);
 
+	GetFNum("\pGeneva", &genevaFont);
+	
+	TextFont(genevaFont);
     TextFace(normal);
-    TextSize(9);
+    TextSize(10);
     BlockMove("\pA Distraction-Free Writing Environment", s, 39);
     textWidth = StringWidth(s);
     MoveTo(box.left + (box.right - box.left - textWidth) / 2, box.top + 144);
