@@ -44,11 +44,12 @@
 #define iItalic  2
 #define iCode    3
 #define iStrike  4
-#define iH1      6
-#define iH2      7
-#define iH3      8
-#define iLink    10
-#define iNone    12
+#define iBody    6
+#define iH1      7
+#define iH2      8
+#define iH3      9
+#define iLink    11
+#define iNone    13
 
 #define mFont  133
 #define iFontChicago    1

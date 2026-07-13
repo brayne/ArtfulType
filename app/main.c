@@ -99,7 +99,7 @@ static void MakeMenu(void)
     DisableItem(gEditMenu, iRedo);
 
     styleMenu = NewMenu(mStyle, "\pStyle");
-    AppendMenu(styleMenu, "\pBold/B;Italic/I;Code/K;Strikethrough;(-;Heading 1/1;Heading 2/2;Heading 3/3;(-;Link/L;(-;None");
+    AppendMenu(styleMenu, "\pBold/B;Italic/I;Code/K;Strikethrough;(-;Body;Heading 1/1;Heading 2/2;Heading 3/3;(-;Link/L;(-;None");
     InsertMenu(styleMenu, 0);
 		
 	gFontMenu = NewMenu(mFont, "\pFont");
@@ -240,6 +240,7 @@ static void DoMenuCommand(long menuResult)
                 case iItalic: ToggleFace(italic); break;
                 case iCode:   ToggleCode(); break;
                 case iStrike: break; /* no native strikethrough on classic Mac text styles */
+                case iBody:   ToggleHeadingHidden(0); break;
                 case iH1:     ToggleHeadingHidden(1); break;
                 case iH2:     ToggleHeadingHidden(2); break;
                 case iH3:     ToggleHeadingHidden(3); break;
@@ -252,6 +253,7 @@ static void DoMenuCommand(long menuResult)
                 case iItalic: WrapSelection("*", "*"); break;
                 case iCode:   WrapSelection("`", "`"); break;
                 case iStrike: WrapSelection("~~", "~~"); break;
+                case iBody:   ApplyHeading(0); break;
                 case iH1:     ApplyHeading(1); break;
                 case iH2:     ApplyHeading(2); break;
                 case iH3:     ApplyHeading(3); break;

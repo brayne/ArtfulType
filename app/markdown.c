@@ -868,11 +868,11 @@ void ApplyHeading(short level)
 {
     short selStart;
     short lineStart;
+    short headingLength;
     long textLen;
     Handle textH;
     char prefix[8];
     short i;
-    Boolean alreadyHeading;
 
     gDirty = true;
 
@@ -880,30 +880,70 @@ void ApplyHeading(short level)
     textH = (**gTE).hText;
     textLen = (**gTE).teLength;
 
+    /*
+        Find the beginning of the paragraph containing the selection.
+    */
     lineStart = selStart;
+
     HLock(textH);
+
     while (lineStart > 0 && (*textH)[lineStart - 1] != '\r')
         lineStart--;
+
+    /*
+        Detect an existing Markdown heading prefix. A heading consists
+        of one or more # characters followed by a space.
+    */
+    headingLength = 0;
+
+    while (lineStart + headingLength < textLen &&
+           headingLength < 6 &&
+           (*textH)[lineStart + headingLength] == '#') {
+        headingLength++;
+    }
+
+    if (headingLength == 0 ||
+        lineStart + headingLength >= textLen ||
+        (*textH)[lineStart + headingLength] != ' ') {
+        headingLength = 0;
+    } else {
+        headingLength++; /* Include the space after the hashes. */
+    }
+
     HUnlock(textH);
 
-    for (i = 0; i < level; i++)
-        prefix[i] = '#';
-    prefix[level] = ' ';
-
-    HLock(textH);
-    alreadyHeading =
-        (lineStart + level + 1 <= textLen) &&
-        (memcmp(*textH + lineStart, prefix, level + 1) == 0);
-    HUnlock(textH);
-
-    if (alreadyHeading) {
-        TESetSelect(lineStart, lineStart + level + 1, gTE);
+    /*
+        Remove any existing heading prefix first. This makes Body work
+        and also allows changing directly from one heading level to
+        another.
+    */
+    if (headingLength > 0) {
+        TESetSelect(lineStart, lineStart + headingLength, gTE);
         TEDelete(gTE);
+    }
+
+    /*
+        Level zero means Body, so leave the paragraph without a prefix.
+    */
+    if (level == 0) {
+        TESetSelect(lineStart, lineStart, gTE);
         return;
     }
 
+    /*
+        Add the requested heading prefix.
+    */
+    for (i = 0; i < level; i++)
+        prefix[i] = '#';
+
+    prefix[level] = ' ';
+
     TESetSelect(lineStart, lineStart, gTE);
     TEInsert(prefix, level + 1, gTE);
+
+    TESetSelect(lineStart + level + 1,
+                lineStart + level + 1,
+                gTE);
 }
 
 void DoLink(void)
@@ -1035,38 +1075,137 @@ void ToggleCode(void)
 void ToggleHeadingHidden(short level)
 {
     short selStart;
-    long lineStart, lineEnd;
+    short selEnd;
+    long firstLineStart;
+    long lastSelectedPos;
+    long lineStart;
+    long lineEnd;
     Handle textH;
     long len;
     TextStyle ts;
     short lh, fa;
-    Boolean isThisLevel;
 
     selStart = (**gHiddenTE).selStart;
+    selEnd = (**gHiddenTE).selEnd;
     textH = (**gHiddenTE).hText;
     len = (**gHiddenTE).teLength;
 
+    if (len == 0)
+        return;
+
     HLock(textH);
-    lineStart = selStart;
-    while (lineStart > 0 && (*textH)[lineStart - 1] != '\r')
-        lineStart--;
-    lineEnd = lineStart;
-    while (lineEnd < len && (*textH)[lineEnd] != '\r')
-        lineEnd++;
+
+    /*
+        Find the beginning of the first paragraph touched by the
+        selection.
+    */
+    firstLineStart = selStart;
+
+    while (firstLineStart > 0 &&
+           (*textH)[firstLineStart - 1] != '\r') {
+        firstLineStart--;
+    }
+
+    /*
+        If the selection ends immediately after a carriage return,
+        don't include the following paragraph merely because its start
+        position equals selEnd.
+    */
+    lastSelectedPos = selEnd;
+
+    if (selEnd > selStart &&
+        lastSelectedPos > 0 &&
+        (*textH)[lastSelectedPos - 1] == '\r') {
+        lastSelectedPos--;
+    }
+
     HUnlock(textH);
 
-    TEGetStyle((short) lineStart, &ts, &lh, &fa, gHiddenTE);
-    isThisLevel = (ts.tsFace & bold) && (ts.tsSize == CurrentFontSize() + (4 - level) * 4);
+    lineStart = firstLineStart;
 
-    TESetSelect((short) lineStart, (short) lineEnd, gHiddenTE);
-    if (isThisLevel) {
-        ts.tsFace = normal;
-        ts.tsSize = CurrentFontSize();
-    } else {
-        ts.tsFace = bold;
-        ts.tsSize = CurrentFontSize() + (4 - level) * 4;
+    while (lineStart < len && lineStart <= lastSelectedPos) {
+        HLock(textH);
+
+        lineEnd = lineStart;
+
+        while (lineEnd < len && (*textH)[lineEnd] != '\r')
+            lineEnd++;
+
+        HUnlock(textH);
+
+        if (lineEnd > lineStart) {
+            TEGetStyle(
+                (short) lineStart,
+                &ts,
+                &lh,
+                &fa,
+                gHiddenTE
+            );
+
+            TESetSelect(
+                (short) lineStart,
+                (short) lineEnd,
+                gHiddenTE
+            );
+
+            if (level == 0) {
+				Boolean isHeading = false;
+				short headingLevel;
+
+				/*
+					Only remove heading formatting if this paragraph is actually
+					using one of the heading sizes. An existing body paragraph
+					must be left untouched so inline bold/italic styling survives.
+				*/
+				for (headingLevel = 1; headingLevel <= 3; headingLevel++) {
+					if (ts.tsSize ==
+						CurrentFontSize() + (4 - headingLevel) * 4) {
+						isHeading = true;
+						break;
+					}
+				}
+
+				if (isHeading) {
+					ts.tsFace &= ~bold;
+					ts.tsSize = CurrentFontSize();
+
+					TESetStyle(
+						doFace + doSize,
+						&ts,
+						true,
+						gHiddenTE
+					);
+				}
+			} else {
+                /*
+                    Apply the selected heading level to every paragraph
+                    touched by the selection.
+                */
+                ts.tsFace |= bold;
+                ts.tsSize =
+                    CurrentFontSize() + (4 - level) * 4;
+                TESetStyle(
+					doFace + doSize,
+					&ts,
+					true,
+					gHiddenTE
+				);
+            }
+        }
+
+        if (lineEnd >= len)
+            break;
+
+        lineStart = lineEnd + 1;
     }
-    TESetStyle(doFace + doSize, &ts, true, gHiddenTE);
+
+    /*
+        Restore the original selection rather than leaving only the
+        last processed line selected.
+    */
+    TESetSelect(selStart, selEnd, gHiddenTE);
+
+    gDirty = true;
 }
 
 /*
