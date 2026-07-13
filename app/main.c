@@ -21,6 +21,7 @@ Str255 gFileName;
 short gVRefNum;
 MenuHandle gViewMenu;
 MenuHandle gEditMenu;
+MenuHandle gFontMenu;
 Boolean gHideMarkdown = true;
 short gZoomIndex = kZoomBaselineIndex;
 
@@ -32,6 +33,9 @@ Boolean gTypingRunActive = false;
 
 Str255 gLinkURLs[MAX_LINKS + 1];
 short gLinkCount = 0;
+
+short gBodyFontNum;
+Str255 gBodyFontName = "\pTimes";
 
 static void Init(void)
 {
@@ -73,6 +77,7 @@ void UpdateMenuBarLook(void)
     }
 }
 
+
 static void MakeMenu(void)
 {
     MenuHandle fileMenu;
@@ -96,7 +101,12 @@ static void MakeMenu(void)
     styleMenu = NewMenu(mStyle, "\pStyle");
     AppendMenu(styleMenu, "\pBold/B;Italic/I;Code/K;Strikethrough;(-;Heading 1/1;Heading 2/2;Heading 3/3;(-;Link/L;(-;None");
     InsertMenu(styleMenu, 0);
-
+		
+	gFontMenu = NewMenu(mFont, "\pFont");
+	AppendMenu(gFontMenu, "\pChicago;Geneva;Helvetica;New York;Palatino;Times");
+	InsertMenu(gFontMenu, 0);
+	CheckItem(gFontMenu, iFontTimes, true);
+	
     gViewMenu = NewMenu(mView, "\pView");
     AppendMenu(gViewMenu, "\pMarkdown;Writer;(-;Zoom In/=;Zoom Out/-;Default Size/0");
     InsertMenu(gViewMenu, 0);
@@ -107,6 +117,39 @@ static void MakeMenu(void)
     InsertMenu(helpMenu, 0);
 
     UpdateMenuBarLook();
+}
+
+short CurrentBodyFont(void)
+{
+    return gBodyFontNum;
+}
+static void UpdateFontMenuChecks(short selectedItem)
+{
+    short item;
+
+    for (item = iFontChicago; item <= iFontTimes; item++)
+        CheckItem(gFontMenu, item, item == selectedItem);
+}
+static void SetBodyFontByName(ConstStr255Param fontName, short menuItem)
+{
+    short fontNum;
+
+    GetFNum(fontName, &fontNum);
+
+    /*
+        Font number zero can represent the system font, including
+        Chicago, so do not treat zero automatically as failure.
+    */
+    gBodyFontNum = fontNum;
+
+    BlockMove(
+        (Ptr) fontName,
+        (Ptr) gBodyFontName,
+        fontName[0] + 1
+    );
+
+    UpdateFontMenuChecks(menuItem);
+    RebuildTextUsingBodyFont();
 }
 
 static void MakeWindow(void)
@@ -123,7 +166,8 @@ static void MakeWindow(void)
                          (WindowPtr) -1L, false, 0);
     SetPort(gWindow);
 
-    GetFNum("\pTimes", &fontNum);
+    GetFNum(gBodyFontName, &gBodyFontNum);
+    fontNum = gBodyFontNum;
     TextFont(fontNum);
     TextSize(CurrentFontSize());
 
@@ -229,7 +273,33 @@ static void DoMenuCommand(long menuResult)
         switch (menuItem) {
             case iAbout: ShowAboutBox(); break;
         }
-    }
+    } else if (menuID == mFont) {
+		switch (menuItem) {
+			case iFontChicago:
+				SetBodyFontByName("\pChicago", iFontChicago);
+				break;
+
+			case iFontGeneva:
+				SetBodyFontByName("\pGeneva", iFontGeneva);
+				break;
+
+			case iFontHelvetica:
+				SetBodyFontByName("\pHelvetica", iFontHelvetica);
+				break;
+
+			case iFontNewYork:
+				SetBodyFontByName("\pNew York", iFontNewYork);
+				break;
+
+			case iFontPalatino:
+				SetBodyFontByName("\pPalatino", iFontPalatino);
+				break;
+
+			case iFontTimes:
+				SetBodyFontByName("\pTimes", iFontTimes);
+				break;
+		}
+	}
     HiliteMenu(0);
     /* HiliteMenu un-hilites the clicked title assuming the Menu Manager's
        own standard white-bar/black-text look, which clobbers our inverted
@@ -320,6 +390,7 @@ static void EventLoop(void)
         TEIdle(gActiveTE);
     }
 }
+
 
 int main(void)
 {

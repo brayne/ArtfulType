@@ -22,7 +22,7 @@ void ClearStyles(void)
     short savedStart = (**gTE).selStart;
     short savedEnd = (**gTE).selEnd;
 
-    GetFNum("\pTimes", &fontNum);
+    fontNum = CurrentBodyFont();
     ts.tsFont = fontNum;
     ts.tsFace = normal;
     ts.tsSize = CurrentFontSize();
@@ -269,7 +269,7 @@ void BuildHiddenView(void)
     TEInsert(*outH, outLen, gHiddenTE);
     DisposeHandle(outH);
 
-    GetFNum("\pTimes", &fontNum);
+    fontNum = CurrentBodyFont();
     ts.tsFont = fontNum;
     ts.tsFace = normal;
     ts.tsSize = CurrentFontSize();
@@ -318,6 +318,25 @@ void BuildHiddenView(void)
     RestoreDrawing(gHiddenTE, &savedViewRect);
 
     InitCursor();
+}
+
+void RebuildTextUsingBodyFont(void)
+{
+    if (gHideMarkdown)
+		SyncHiddenToCanonical();
+    
+    ClearStyles();
+    BuildHiddenView();
+
+    if (gHideMarkdown)
+        gActiveTE = gHiddenTE;
+    else
+        gActiveTE = gTE;
+
+    AdjustScrollbar();
+
+    if (gWindow != NULL)
+        InvalRect(&gWindow->portRect);
 }
 
 /*
@@ -721,7 +740,7 @@ void InsertMarkdownAsStyled(Handle srcH, long srcLen, TEHandle te)
        insertion point -- normalize the whole pasted range to plain
        before applying the specific ops parsed above, the same order
        BuildHiddenView uses for the same reason. */
-    GetFNum("\pTimes", &fontNum);
+    fontNum = CurrentBodyFont();
     baseStyle.tsFont = fontNum;
     baseStyle.tsFace = normal;
     baseStyle.tsSize = CurrentFontSize();
@@ -1003,13 +1022,13 @@ void ToggleCode(void)
 {
     TextStyle ts;
     short lh, fa;
-    short monacoFont, timesFont;
+    short monacoFont, bodyFont;
 
     GetFNum("\pMonaco", &monacoFont);
-    GetFNum("\pTimes", &timesFont);
+    bodyFont = CurrentBodyFont();
 
     TEGetStyle((**gHiddenTE).selStart, &ts, &lh, &fa, gHiddenTE);
-    ts.tsFont = (ts.tsFont == monacoFont) ? timesFont : monacoFont;
+    ts.tsFont = (ts.tsFont == monacoFont) ? bodyFont : monacoFont;
     TESetStyle(doFont, &ts, true, gHiddenTE);
 }
 
@@ -1061,7 +1080,7 @@ static void SetTypingStyleNormal(short pos)
     TextStyle ts;
     short fontNum;
 
-    GetFNum("\pTimes", &fontNum);
+    fontNum = CurrentBodyFont();
     ts.tsFont = fontNum;
     ts.tsFace = normal;
     ts.tsSize = CurrentFontSize();
@@ -1351,7 +1370,7 @@ void ClearSelectionStyleHidden(void)
     if ((**gHiddenTE).selStart == (**gHiddenTE).selEnd)
         return;
 
-    GetFNum("\pTimes", &fontNum);
+    fontNum = CurrentBodyFont();
     ts.tsFont = fontNum;
     ts.tsFace = normal;
     ts.tsSize = CurrentFontSize();

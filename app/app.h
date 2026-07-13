@@ -50,6 +50,14 @@
 #define iLink    10
 #define iNone    12
 
+#define mFont  133
+#define iFontChicago    1
+#define iFontGeneva     2
+#define iFontHelvetica  3
+#define iFontNewYork    4
+#define iFontPalatino   5
+#define iFontTimes      6
+
 #define kSaveChangesAlert 130
 #define kSaveBtn          1
 #define kCancelBtn        2
@@ -150,8 +158,14 @@ extern Boolean gTypingRunActive;
 extern Str255 gLinkURLs[MAX_LINKS + 1];
 extern short gLinkCount;
 
+extern short gBodyFontNum;
+extern Str255 gBodyFontName;
+extern MenuHandle gFontMenu;
+
 /* main.c */
 void UpdateMenuBarLook(void);
+short CurrentBodyFont(void);
+void RebuildTextUsingBodyFont(void);
 
 /* scrolling.c */
 void UpdateScrollbarRange(void);
@@ -162,6 +176,7 @@ void InvalidateHeightCache(void);
 
 /* markdown.c */
 void ClearStyles(void);
+void RebuildTextUsingBodyFont(void);
 void SuppressDrawing(TEHandle te, Rect *saved);
 void RestoreDrawing(TEHandle te, Rect *saved);
 void BuildHiddenView(void);
