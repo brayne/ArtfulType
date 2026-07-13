@@ -126,6 +126,41 @@ void BuildHiddenView(void)
                 continue;
             }
         }
+		
+		/* Bold + italic: ***text***
+		   Must be checked before **bold** and *italic*. */
+		if (i + 2 < len &&
+			(*srcH)[i] == '*' &&
+			(*srcH)[i + 1] == '*' &&
+			(*srcH)[i + 2] == '*') {
+
+			long j = i + 3;
+
+			while (j + 2 < len &&
+				   !((*srcH)[j] == '*' &&
+					 (*srcH)[j + 1] == '*' &&
+					 (*srcH)[j + 2] == '*')) {
+				j++;
+			}
+
+			if (j + 2 < len) {
+				long outStart = outLen;
+				long m;
+
+				for (m = i + 3; m < j; m++)
+					(*outH)[outLen++] = (*srcH)[m];
+
+				if (opCount < MAX_STYLE_OPS) {
+					ops[opCount].start = (short) outStart;
+					ops[opCount].end = (short) outLen;
+					ops[opCount].kind = 'X';
+					opCount++;
+				}
+
+				i = j + 3;
+				continue;
+			}
+		}
 
         if (i + 1 < len && (*srcH)[i] == '*' && (*srcH)[i + 1] == '*') {
             long j = i + 2;
@@ -253,6 +288,10 @@ void BuildHiddenView(void)
                 break;
             case 'I':
                 opStyle.tsFace = italic;
+                TESetStyle(doFace, &opStyle, true, gHiddenTE);
+                break;
+            case 'X':
+                opStyle.tsFace = bold | italic;
                 TESetStyle(doFace, &opStyle, true, gHiddenTE);
                 break;
             case 'C':
