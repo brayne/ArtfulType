@@ -32,7 +32,7 @@ static const ColorSpec kSplashImage4BitPalette[16] = {
 };
 
 /* Bump this on every release. */
-static const unsigned char kVersionString[] = "\pv0.1.2-alpha";
+static const unsigned char kVersionString[] = "\pv0.1-alpha";
 static const unsigned char kGitHubURL[] = "\pgithub.com/ActionRetro";
 
 typedef struct {
@@ -175,7 +175,7 @@ static pascal void DrawSplashTitle(DialogPtr dlg, short itemNo)
     TextFont(0);
     TextSize(12);
     TextFace(bold);
-    BlockMove("\pThe Artful Type", s, 16);
+    BlockMove("\pCloudType", s, 16);
     textWidth = StringWidth(s);
     MoveTo(box.left + (box.right - box.left - textWidth) / 2, box.top + 18);
     DrawString(s);
@@ -216,7 +216,7 @@ static pascal void DrawSplashTitle(DialogPtr dlg, short itemNo)
 	TextFont(genevaFont);
     TextFace(normal);
     TextSize(10);
-    BlockMove("\pA Distraction-Free Writing Environment", s, 39);
+    BlockMove("\pA Cloud-based Writing Environment", s, 39);
     textWidth = StringWidth(s);
     MoveTo(box.left + (box.right - box.left - textWidth) / 2, box.top + 144);
     DrawString(s);

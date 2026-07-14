@@ -5,11 +5,11 @@
    than assuming. The 30pt level has no native bitmap (24pt is the
    largest this font has) and renders as a scaled enlargement of the
    24pt bitmap instead -- a known, accepted tradeoff for going bigger. */
-static short kZoomLevels[] = { -6, -4, 0, 6, 12 };
+static short kZoomLevels[] = { 10, 12, 14, 16, 18, 20 };
 
 short CurrentFontSize(void)
 {
-    return FONT_SIZE + kZoomLevels[gZoomIndex];
+    return kZoomLevels[gZoomIndex];
 }
 
 void LoadZoomPref(void)
@@ -109,12 +109,7 @@ static void ApplyZoomIndex(short newIndex)
     InvalRect(&gWindow->portRect);
 }
 
-void DoZoom(short direction)
+void SetFontSizeIndex(short index)
 {
-    ApplyZoomIndex(gZoomIndex + direction);
-}
-
-void DoZoomReset(void)
-{
-    ApplyZoomIndex(kZoomBaselineIndex);
+    ApplyZoomIndex(index);
 }

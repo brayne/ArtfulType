@@ -1,5 +1,5 @@
-#ifndef ARTFULTYPE_APP_H
-#define ARTFULTYPE_APP_H
+#ifndef CLOUDTYPE_APP_H
+#define CLOUDTYPE_APP_H
 
 #include <Quickdraw.h>
 #include <Windows.h>
@@ -83,19 +83,22 @@
 #define mView        130
 #define iMarkdownView 1
 #define iWriterView  2
-#define iZoomIn      4
-#define iZoomOut     5
-#define iZoomDefault 6
-#define iMarginSmall   8
-#define iMarginMedium  9
-#define iMarginLarge   10
+#define iFont10   4
+#define iFont12   5
+#define iFont14   6
+#define iFont16   7
+#define iFont18   8
+#define iFont20   9
+#define iMarginSmall   11
+#define iMarginMedium  12
+#define iMarginLarge   13
 
 #define mHelp    132
 #define iAbout   1
 
 #define MAX_STYLE_OPS 512
 
-#define kNumZoomLevels 5
+#define kNumZoomLevels 6
 #define kZoomBaselineIndex 2
 
 #define kZoomPrefType 'ZLvl'
@@ -215,9 +218,10 @@ void DoSelectAll(void);
 
 /* zoom.c */
 short CurrentFontSize(void);
-void LoadZoomPref(void);
 void DoZoom(short direction);
 void DoZoomReset(void);
+void SetFontSizeIndex(short index);
+void LoadZoomPref(void);
 
 /* file.c */
 void SetViewMode(Boolean hideMarkdown);

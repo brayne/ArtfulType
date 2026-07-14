@@ -35,9 +35,9 @@ Str255 gLinkURLs[MAX_LINKS + 1];
 short gLinkCount = 0;
 
 short gBodyFontNum;
-Str255 gBodyFontName = "\pTimes";
+Str255 gBodyFontName = "\pGeneva";
 
-short gMarginSize = MARGIN_MEDIUM;
+short gMarginSize = MARGIN_SMALL;
 
 static void Init(void)
 {
@@ -107,19 +107,54 @@ static void MakeMenu(void)
 	gFontMenu = NewMenu(mFont, "\pFont");
 	AppendMenu(gFontMenu, "\pChicago;Geneva;Helvetica;New York;Palatino;Times");
 	InsertMenu(gFontMenu, 0);
-	CheckItem(gFontMenu, iFontTimes, true);
+	CheckItem(gFontMenu, iFontGeneva, true);
 	
     gViewMenu = NewMenu(mView, "\pView");
-    AppendMenu(gViewMenu, "\pMarkdown;Writer;(-;Zoom In/=;Zoom Out/-;Default Size/0;(-;Small Margins;Medium Margins;Large Margins");
+    AppendMenu(gViewMenu,"\pMarkdown;Writer;(-;10 pt;12 pt;14 pt;16 pt;18 pt;20 pt;(-;Small Margins;Medium Margins;Large Margins");
     InsertMenu(gViewMenu, 0);
     CheckItem(gViewMenu, iWriterView, true);
-    CheckItem(gViewMenu, iMarginMedium, true);
+    CheckItem(gViewMenu, iFont12, true);
+    CheckItem(gViewMenu, iMarginSmall, true);
 
     helpMenu = NewMenu(mHelp, "\pHelp");
-    AppendMenu(helpMenu, "\pAbout The Artful Type...");
+    AppendMenu(helpMenu, "\pAbout CloudType...");
     InsertMenu(helpMenu, 0);
 
     UpdateMenuBarLook();
+}
+
+static void UpdateFontSizeChecks(short selectedItem){
+	CheckItem(
+        gViewMenu,
+        iFont10,
+        selectedItem == iFont10
+    );
+    CheckItem(
+        gViewMenu,
+        iFont12,
+        selectedItem == iFont12
+    );
+    CheckItem(
+        gViewMenu,
+        iFont14,
+        selectedItem == iFont14
+    );
+    CheckItem(
+        gViewMenu,
+        iFont16,
+        selectedItem == iFont16
+    );
+    CheckItem(
+        gViewMenu,
+        iFont18,
+        selectedItem == iFont18
+    );
+    CheckItem(
+        gViewMenu,
+        iFont20,
+        selectedItem == iFont20
+    );
+
 }
 
 static void UpdateMarginMenuChecks(short selectedItem)
@@ -357,9 +392,35 @@ static void DoMenuCommand(long menuResult)
         switch (menuItem) {
             case iMarkdownView: SetViewMode(false); break;
             case iWriterView:   SetViewMode(true); break;
-            case iZoomIn:       DoZoom(1); break;
-            case iZoomOut:      DoZoom(-1); break;
-            case iZoomDefault:  DoZoomReset(); break;
+            case iFont10:
+				SetFontSizeIndex(0);
+				UpdateFontSizeChecks(iFont10);
+				break;
+				
+			case iFont12:
+				SetFontSizeIndex(1);
+				UpdateFontSizeChecks(iFont12);
+				break;
+
+			case iFont14:
+				SetFontSizeIndex(2);
+				UpdateFontSizeChecks(iFont14);
+				break;
+
+			case iFont16:
+				SetFontSizeIndex(3);
+				UpdateFontSizeChecks(iFont16);
+				break;
+
+			case iFont18:
+				SetFontSizeIndex(4);
+				UpdateFontSizeChecks(iFont18);
+				break;
+
+			case iFont20:
+				SetFontSizeIndex(5);
+				UpdateFontSizeChecks(iFont20);
+				break;
             case iMarginSmall:	ApplyMarginSize(MARGIN_SMALL); UpdateMarginMenuChecks(iMarginSmall); break;
 			case iMarginMedium:	ApplyMarginSize(MARGIN_MEDIUM); UpdateMarginMenuChecks(iMarginMedium); break;
 			case iMarginLarge:	ApplyMarginSize(MARGIN_LARGE); UpdateMarginMenuChecks(iMarginLarge); break;
