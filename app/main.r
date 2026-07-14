@@ -25,7 +25,7 @@ resource 'ALRT' (130) {
 };
 
 data 'ZLvl' (128) {
-    $"0002"
+    $"0001"
 };
 
 resource 'DITL' (131) {

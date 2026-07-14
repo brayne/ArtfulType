@@ -99,7 +99,7 @@
 #define MAX_STYLE_OPS 512
 
 #define kNumZoomLevels 6
-#define kZoomBaselineIndex 2
+#define kZoomBaselineIndex 1
 
 #define kZoomPrefType 'ZLvl'
 #define kZoomPrefID   128

@@ -113,7 +113,6 @@ static void MakeMenu(void)
     AppendMenu(gViewMenu,"\pMarkdown;Writer;(-;10 pt;12 pt;14 pt;16 pt;18 pt;20 pt;(-;Small Margins;Medium Margins;Large Margins");
     InsertMenu(gViewMenu, 0);
     CheckItem(gViewMenu, iWriterView, true);
-    CheckItem(gViewMenu, iFont12, true);
     CheckItem(gViewMenu, iMarginSmall, true);
 
     helpMenu = NewMenu(mHelp, "\pHelp");
@@ -123,38 +122,14 @@ static void MakeMenu(void)
     UpdateMenuBarLook();
 }
 
-static void UpdateFontSizeChecks(short selectedItem){
-	CheckItem(
-        gViewMenu,
-        iFont10,
-        selectedItem == iFont10
-    );
-    CheckItem(
-        gViewMenu,
-        iFont12,
-        selectedItem == iFont12
-    );
-    CheckItem(
-        gViewMenu,
-        iFont14,
-        selectedItem == iFont14
-    );
-    CheckItem(
-        gViewMenu,
-        iFont16,
-        selectedItem == iFont16
-    );
-    CheckItem(
-        gViewMenu,
-        iFont18,
-        selectedItem == iFont18
-    );
-    CheckItem(
-        gViewMenu,
-        iFont20,
-        selectedItem == iFont20
-    );
-
+static void UpdateFontSizeChecks(void)
+{
+    CheckItem(gViewMenu, iFont10, gZoomIndex == 0);
+    CheckItem(gViewMenu, iFont12, gZoomIndex == 1);
+    CheckItem(gViewMenu, iFont14, gZoomIndex == 2);
+    CheckItem(gViewMenu, iFont16, gZoomIndex == 3);
+    CheckItem(gViewMenu, iFont18, gZoomIndex == 4);
+    CheckItem(gViewMenu, iFont20, gZoomIndex == 5);
 }
 
 static void UpdateMarginMenuChecks(short selectedItem)
@@ -394,32 +369,32 @@ static void DoMenuCommand(long menuResult)
             case iWriterView:   SetViewMode(true); break;
             case iFont10:
 				SetFontSizeIndex(0);
-				UpdateFontSizeChecks(iFont10);
+				UpdateFontSizeChecks();
 				break;
 				
 			case iFont12:
 				SetFontSizeIndex(1);
-				UpdateFontSizeChecks(iFont12);
+				UpdateFontSizeChecks();
 				break;
 
 			case iFont14:
 				SetFontSizeIndex(2);
-				UpdateFontSizeChecks(iFont14);
+				UpdateFontSizeChecks();
 				break;
 
 			case iFont16:
 				SetFontSizeIndex(3);
-				UpdateFontSizeChecks(iFont16);
+				UpdateFontSizeChecks();
 				break;
 
 			case iFont18:
 				SetFontSizeIndex(4);
-				UpdateFontSizeChecks(iFont18);
+				UpdateFontSizeChecks();
 				break;
 
 			case iFont20:
 				SetFontSizeIndex(5);
-				UpdateFontSizeChecks(iFont20);
+				UpdateFontSizeChecks();
 				break;
             case iMarginSmall:	ApplyMarginSize(MARGIN_SMALL); UpdateMarginMenuChecks(iMarginSmall); break;
 			case iMarginMedium:	ApplyMarginSize(MARGIN_MEDIUM); UpdateMarginMenuChecks(iMarginMedium); break;
@@ -555,6 +530,7 @@ int main(void)
     Init();
     LoadZoomPref();
     MakeMenu();
+    UpdateFontSizeChecks();
     MakeWindow();
 
     /* A newly-created visible window has its whole content area marked
