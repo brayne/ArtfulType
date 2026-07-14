@@ -17,8 +17,10 @@
 #include <Multiverse.h>
 #include <string.h>
 
-#define MARGIN_H     25
-#define MARGIN_TOP   25
+#define MARGIN_SMALL   25
+#define MARGIN_MEDIUM  45
+#define MARGIN_LARGE   60
+#define MARGIN_TOP   30
 #define MARGIN_BOTTOM 24
 #define MENU_BAR_HEIGHT 20
 #define FONT_SIZE 18
@@ -84,6 +86,9 @@
 #define iZoomIn      4
 #define iZoomOut     5
 #define iZoomDefault 6
+#define iMarginSmall   8
+#define iMarginMedium  9
+#define iMarginLarge   10
 
 #define mHelp    132
 #define iAbout   1
@@ -162,6 +167,7 @@ extern short gLinkCount;
 extern short gBodyFontNum;
 extern Str255 gBodyFontName;
 extern MenuHandle gFontMenu;
+extern short gMarginSize;
 
 /* main.c */
 void UpdateMenuBarLook(void);

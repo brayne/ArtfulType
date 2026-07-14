@@ -37,6 +37,8 @@ short gLinkCount = 0;
 short gBodyFontNum;
 Str255 gBodyFontName = "\pTimes";
 
+short gMarginSize = MARGIN_MEDIUM;
+
 static void Init(void)
 {
     InitGraf(&qd.thePort);
@@ -108,15 +110,103 @@ static void MakeMenu(void)
 	CheckItem(gFontMenu, iFontTimes, true);
 	
     gViewMenu = NewMenu(mView, "\pView");
-    AppendMenu(gViewMenu, "\pMarkdown;Writer;(-;Zoom In/=;Zoom Out/-;Default Size/0");
+    AppendMenu(gViewMenu, "\pMarkdown;Writer;(-;Zoom In/=;Zoom Out/-;Default Size/0;(-;Small Margins;Medium Margins;Large Margins");
     InsertMenu(gViewMenu, 0);
     CheckItem(gViewMenu, iWriterView, true);
+    CheckItem(gViewMenu, iMarginMedium, true);
 
     helpMenu = NewMenu(mHelp, "\pHelp");
     AppendMenu(helpMenu, "\pAbout The Artful Type...");
     InsertMenu(helpMenu, 0);
 
     UpdateMenuBarLook();
+}
+
+static void UpdateMarginMenuChecks(short selectedItem)
+{
+    CheckItem(
+        gViewMenu,
+        iMarginSmall,
+        selectedItem == iMarginSmall
+    );
+
+    CheckItem(
+        gViewMenu,
+        iMarginMedium,
+        selectedItem == iMarginMedium
+    );
+
+    CheckItem(
+        gViewMenu,
+        iMarginLarge,
+        selectedItem == iMarginLarge
+    );
+}
+
+static void ApplyMarginSize(short marginSize)
+{
+    Rect viewRect;
+    Rect sbRect;
+    short oldTop;
+
+    if (gWindow == NULL)
+        return;
+
+    gMarginSize = marginSize;
+
+    SetPort(gWindow);
+
+    /*
+        Preserve the current vertical scroll position while changing
+        only the horizontal layout.
+    */
+    oldTop = (**gActiveTE).destRect.top;
+
+    viewRect = gWindow->portRect;
+    viewRect.left += gMarginSize;
+    viewRect.right -= gMarginSize;
+    viewRect.top += MARGIN_TOP;
+    viewRect.bottom -= MARGIN_BOTTOM;
+
+    /*
+        Update both the Markdown and Writer TextEdit records.
+    */
+    (**gTE).viewRect = viewRect;
+    (**gTE).destRect.left = viewRect.left;
+    (**gTE).destRect.right = viewRect.right;
+
+    (**gHiddenTE).viewRect = viewRect;
+    (**gHiddenTE).destRect.left = viewRect.left;
+    (**gHiddenTE).destRect.right = viewRect.right;
+
+    /*
+        Keep the existing vertical scroll position.
+    */
+    (**gTE).destRect.top = oldTop;
+    (**gHiddenTE).destRect.top = oldTop;
+
+    /*
+        Reposition and resize the scrollbar.
+    */
+    sbRect = viewRect;
+    sbRect.left =
+        viewRect.right + (gMarginSize - SCROLLBAR_WIDTH) / 2;
+    sbRect.right = sbRect.left + SCROLLBAR_WIDTH;
+    sbRect.top -= 1;
+    sbRect.bottom += 1;
+
+    MoveControl(gScrollBar, sbRect.left, sbRect.top);
+    SizeControl(
+        gScrollBar,
+        sbRect.right - sbRect.left,
+        sbRect.bottom - sbRect.top
+    );
+
+    TECalText(gTE);
+    TECalText(gHiddenTE);
+    AdjustScrollbar();
+
+    InvalRect(&gWindow->portRect);
 }
 
 short CurrentBodyFont(void)
@@ -172,8 +262,8 @@ static void MakeWindow(void)
     TextSize(CurrentFontSize());
 
     viewRect = gWindow->portRect;
-    viewRect.left += MARGIN_H;
-    viewRect.right -= MARGIN_H;
+    viewRect.left += gMarginSize;
+    viewRect.right -= gMarginSize;
     viewRect.top += MARGIN_TOP;
     viewRect.bottom -= MARGIN_BOTTOM;
 
@@ -183,7 +273,7 @@ static void MakeWindow(void)
     TEActivate(gActiveTE);
 
     sbRect = viewRect;
-    sbRect.left = viewRect.right + (MARGIN_H - SCROLLBAR_WIDTH) / 2;
+    sbRect.left = viewRect.right + (gMarginSize - SCROLLBAR_WIDTH) / 2;
     sbRect.right = sbRect.left + SCROLLBAR_WIDTH;
     sbRect.top -= 1;
     sbRect.bottom += 1;
@@ -270,6 +360,9 @@ static void DoMenuCommand(long menuResult)
             case iZoomIn:       DoZoom(1); break;
             case iZoomOut:      DoZoom(-1); break;
             case iZoomDefault:  DoZoomReset(); break;
+            case iMarginSmall:	ApplyMarginSize(MARGIN_SMALL); UpdateMarginMenuChecks(iMarginSmall); break;
+			case iMarginMedium:	ApplyMarginSize(MARGIN_MEDIUM); UpdateMarginMenuChecks(iMarginMedium); break;
+			case iMarginLarge:	ApplyMarginSize(MARGIN_LARGE); UpdateMarginMenuChecks(iMarginLarge); break;
         }
     } else if (menuID == mHelp) {
         switch (menuItem) {
