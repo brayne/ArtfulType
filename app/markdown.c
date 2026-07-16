@@ -320,13 +320,45 @@ void BuildHiddenView(void)
     InitCursor();
 }
 
+static void SetEmptyTextInsertionStyle(TEHandle te)
+{
+    TextStyle ts;
+
+    if (te == NULL || (**te).teLength != 0)
+        return;
+
+    ts.tsFont = CurrentBodyFont();
+    ts.tsFace = normal;
+    ts.tsSize = CurrentFontSize();
+
+    ts.tsColor.red = 0;
+    ts.tsColor.green = 0;
+    ts.tsColor.blue = 0;
+
+    TESetSelect(0, 0, te);
+    TESetStyle(
+        doFont + doFace + doSize + doColor,
+        &ts,
+        false,
+        te
+    );
+}
+
 void RebuildTextUsingBodyFont(void)
 {
     if (gHideMarkdown)
-		SyncHiddenToCanonical();
-    
+        SyncHiddenToCanonical();
+
     ClearStyles();
     BuildHiddenView();
+
+    /*
+        There may be no existing characters for TESetStyle to modify.
+        Set the null-selection style explicitly so that the next
+        character typed uses the newly selected body font.
+    */
+    SetEmptyTextInsertionStyle(gTE);
+    SetEmptyTextInsertionStyle(gHiddenTE);
 
     if (gHideMarkdown)
         gActiveTE = gHiddenTE;
