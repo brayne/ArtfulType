@@ -24,8 +24,11 @@ resource 'ALRT' (130) {
     alertPositionMainScreen
 };
 
-data 'ZLvl' (128) {
-    $"0002"
+data 'ATPr' (128) {
+    $"0001"  /* Preferences format version */
+    $"0002"  /* Zoom index: normal 18-point size */
+    $"0006"  /* Font menu item: Times */
+    $"002D"  /* Margin width: 45 pixels */
 };
 
 resource 'DITL' (131) {

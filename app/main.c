@@ -21,7 +21,7 @@ Str255 gFileName;
 short gVRefNum;
 MenuHandle gViewMenu;
 MenuHandle gEditMenu;
-MenuHandle gFontMenu;
+
 Boolean gHideMarkdown = true;
 short gZoomIndex = kZoomBaselineIndex;
 
@@ -36,7 +36,8 @@ short gLinkCount = 0;
 
 short gBodyFontNum;
 Str255 gBodyFontName = "\pTimes";
-
+short gBodyFontMenuItem = iFontTimes;
+MenuHandle gFontMenu;
 short gMarginSize = MARGIN_MEDIUM;
 
 static void Init(void)
@@ -107,13 +108,19 @@ static void MakeMenu(void)
 	gFontMenu = NewMenu(mFont, "\pFont");
 	AppendMenu(gFontMenu, "\pChicago;Geneva;Helvetica;New York;Palatino;Times");
 	InsertMenu(gFontMenu, 0);
-	CheckItem(gFontMenu, iFontTimes, true);
+	CheckItem(gFontMenu, gBodyFontMenuItem, true);
 	
     gViewMenu = NewMenu(mView, "\pView");
     AppendMenu(gViewMenu, "\pMarkdown;Writer;(-;Zoom In/=;Zoom Out/-;Default Size/0;(-;Small Margins;Medium Margins;Large Margins");
     InsertMenu(gViewMenu, 0);
     CheckItem(gViewMenu, iWriterView, true);
-    CheckItem(gViewMenu, iMarginMedium, true);
+
+	if (gMarginSize == MARGIN_SMALL)
+		CheckItem(gViewMenu, iMarginSmall, true);
+	else if (gMarginSize == MARGIN_LARGE)
+		CheckItem(gViewMenu, iMarginLarge, true);
+	else
+		CheckItem(gViewMenu, iMarginMedium, true);
 
     helpMenu = NewMenu(mHelp, "\pHelp");
     AppendMenu(helpMenu, "\pAbout The Artful Type...");
@@ -238,8 +245,11 @@ static void SetBodyFontByName(ConstStr255Param fontName, short menuItem)
         fontName[0] + 1
     );
 
-    UpdateFontMenuChecks(menuItem);
-    RebuildTextUsingBodyFont();
+    gBodyFontMenuItem = menuItem;
+
+	UpdateFontMenuChecks(menuItem);
+	RebuildTextUsingBodyFont();
+	SavePreferences();
 }
 
 static void MakeWindow(void)
@@ -360,9 +370,23 @@ static void DoMenuCommand(long menuResult)
             case iZoomIn:       DoZoom(1); break;
             case iZoomOut:      DoZoom(-1); break;
             case iZoomDefault:  DoZoomReset(); break;
-            case iMarginSmall:	ApplyMarginSize(MARGIN_SMALL); UpdateMarginMenuChecks(iMarginSmall); break;
-			case iMarginMedium:	ApplyMarginSize(MARGIN_MEDIUM); UpdateMarginMenuChecks(iMarginMedium); break;
-			case iMarginLarge:	ApplyMarginSize(MARGIN_LARGE); UpdateMarginMenuChecks(iMarginLarge); break;
+			case iMarginSmall:
+				ApplyMarginSize(MARGIN_SMALL);
+				UpdateMarginMenuChecks(iMarginSmall);
+				SavePreferences();
+				break;
+
+			case iMarginMedium:
+				ApplyMarginSize(MARGIN_MEDIUM);
+				UpdateMarginMenuChecks(iMarginMedium);
+				SavePreferences();
+				break;
+
+			case iMarginLarge:
+				ApplyMarginSize(MARGIN_LARGE);
+				UpdateMarginMenuChecks(iMarginLarge);
+				SavePreferences();
+				break;
         }
     } else if (menuID == mHelp) {
         switch (menuItem) {
@@ -492,7 +516,36 @@ int main(void)
     short message, count;
 
     Init();
-    LoadZoomPref();
+    LoadPreferences();
+    
+    switch (gBodyFontMenuItem) {
+		case iFontChicago:
+			BlockMoveData("\pChicago", gBodyFontName, 8);
+			break;
+
+		case iFontGeneva:
+			BlockMoveData("\pGeneva", gBodyFontName, 7);
+			break;
+
+		case iFontHelvetica:
+			BlockMoveData("\pHelvetica", gBodyFontName, 10);
+			break;
+
+		case iFontNewYork:
+			BlockMoveData("\pNew York", gBodyFontName, 9);
+			break;
+
+		case iFontPalatino:
+			BlockMoveData("\pPalatino", gBodyFontName, 9);
+			break;
+
+		case iFontTimes:
+		default:
+			BlockMoveData("\pTimes", gBodyFontName, 6);
+			gBodyFontMenuItem = iFontTimes;
+			break;
+	}
+	
     MakeMenu();
     MakeWindow();
 

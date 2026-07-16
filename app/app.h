@@ -98,8 +98,16 @@
 #define kNumZoomLevels 5
 #define kZoomBaselineIndex 2
 
-#define kZoomPrefType 'ZLvl'
-#define kZoomPrefID   128
+#define kPrefsType    'ATPr'
+#define kPrefsID      128
+#define kPrefsVersion 1
+
+typedef struct {
+    short version;
+    short zoomIndex;
+    short fontMenuItem;
+    short marginSize;
+} AppPreferences;
 
 /*
     Undo/redo snapshots store the *canonical markdown text* regardless
@@ -166,6 +174,7 @@ extern short gLinkCount;
 
 extern short gBodyFontNum;
 extern Str255 gBodyFontName;
+extern short gBodyFontMenuItem;
 extern MenuHandle gFontMenu;
 extern short gMarginSize;
 
@@ -215,7 +224,8 @@ void DoSelectAll(void);
 
 /* zoom.c */
 short CurrentFontSize(void);
-void LoadZoomPref(void);
+void LoadPreferences(void);
+void SavePreferences(void);
 void DoZoom(short direction);
 void DoZoomReset(void);
 

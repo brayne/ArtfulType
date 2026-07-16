@@ -12,32 +12,83 @@ short CurrentFontSize(void)
     return FONT_SIZE + kZoomLevels[gZoomIndex];
 }
 
-void LoadZoomPref(void)
+void LoadPreferences(void)
 {
-    Handle prefH = GetResource(kZoomPrefType, kZoomPrefID);
+    Handle prefH;
+    AppPreferences *prefs;
 
-    if (prefH != NULL) {
-        HLock(prefH);
-        gZoomIndex = *(short *) *prefH;
-        HUnlock(prefH);
+    /*
+        Defaults are already assigned by the global declarations in
+        main.c. Only replace them when a valid preferences resource
+        is present.
+    */
+    prefH = GetResource(kPrefsType, kPrefsID);
+
+    if (prefH == NULL)
+        return;
+
+    if (GetHandleSize(prefH) < sizeof(AppPreferences)) {
         ReleaseResource(prefH);
-        if (gZoomIndex < 0 || gZoomIndex >= kNumZoomLevels)
-            gZoomIndex = kZoomBaselineIndex;
+        return;
     }
+
+    HLock(prefH);
+    prefs = (AppPreferences *) *prefH;
+
+    if (prefs->version == kPrefsVersion) {
+        if (prefs->zoomIndex >= 0 &&
+            prefs->zoomIndex < kNumZoomLevels) {
+            gZoomIndex = prefs->zoomIndex;
+        }
+
+        if (prefs->fontMenuItem >= iFontChicago &&
+			prefs->fontMenuItem <= iFontTimes) {
+			gBodyFontMenuItem = prefs->fontMenuItem;
+		}
+
+        if (prefs->marginSize == MARGIN_SMALL ||
+            prefs->marginSize == MARGIN_MEDIUM ||
+            prefs->marginSize == MARGIN_LARGE) {
+            gMarginSize = prefs->marginSize;
+        }
+    }
+
+    HUnlock(prefH);
+    ReleaseResource(prefH);
 }
 
-static void SaveZoomPref(void)
+void SavePreferences(void)
 {
-    Handle prefH = GetResource(kZoomPrefType, kZoomPrefID);
+    Handle prefH;
+    AppPreferences *prefs;
 
-    if (prefH != NULL) {
-        HLock(prefH);
-        *(short *) *prefH = gZoomIndex;
-        HUnlock(prefH);
-        ChangedResource(prefH);
-        WriteResource(prefH);
-        ReleaseResource(prefH);
+    prefH = GetResource(kPrefsType, kPrefsID);
+
+    if (prefH == NULL)
+        return;
+
+    if (GetHandleSize(prefH) < sizeof(AppPreferences)) {
+        SetHandleSize(prefH, sizeof(AppPreferences));
+
+        if (MemError() != noErr) {
+            ReleaseResource(prefH);
+            return;
+        }
     }
+
+    HLock(prefH);
+    prefs = (AppPreferences *) *prefH;
+
+    prefs->version = kPrefsVersion;
+    prefs->zoomIndex = gZoomIndex;
+    prefs->fontMenuItem = gBodyFontMenuItem;
+    prefs->marginSize = gMarginSize;
+
+    HUnlock(prefH);
+
+    ChangedResource(prefH);
+    WriteResource(prefH);
+    ReleaseResource(prefH);
 }
 
 /*
@@ -104,7 +155,7 @@ static void ApplyZoomIndex(short newIndex)
 
     ClearStyles();
     RescaleStyles(gHiddenTE, oldBase, newBase);
-    SaveZoomPref();
+    SavePreferences();
     AdjustScrollbar();
     InvalRect(&gWindow->portRect);
 }
